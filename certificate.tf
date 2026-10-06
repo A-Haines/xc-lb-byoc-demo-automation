@@ -3,7 +3,7 @@ resource "volterra_certificate" "this" {
   name      = local.cert_name
   namespace = var.certificate_namespace
 
-  certificate_url = "string:///${base64encode(local.cert_pem)}"
+  certificate_url = "string:///${base64encode(local.cert_full_pem)}"
 
   private_key {
     dynamic "clear_secret_info" {
@@ -40,10 +40,6 @@ resource "volterra_certificate" "this" {
         )
       )
       error_message = "Missing inputs for certificate_mode=${var.certificate_mode}: clear needs cert+key material; blindfold needs cert + blindfold_key_location; vault needs vault_key_location + vault_provider."
-    }
-    precondition {
-      condition     = var.certificate_mode != "existing" || var.existing_certificate_name != ""
-      error_message = "certificate_mode=existing requires existing_certificate_name."
     }
   }
 }

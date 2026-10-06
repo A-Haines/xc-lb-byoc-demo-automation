@@ -41,7 +41,13 @@ variable "origin_port" {
 }
 
 variable "origin_use_tls" {
-  description = "If true, connect to origins over TLS (skips server verification by default)."
+  description = "If true, connect to origins over TLS."
+  type        = bool
+  default     = false
+}
+
+variable "origin_tls_skip_verification" {
+  description = "If true (and origin_use_tls), skip origin server certificate verification. Insecure; default verifies against the Volterra trusted CA bundle."
   type        = bool
   default     = false
 }

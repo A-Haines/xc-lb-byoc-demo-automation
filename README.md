@@ -43,7 +43,8 @@ For the XC-managed (Venafi/Sectigo) path, see
 
 Certificate/key material in `clear`/`blindfold` modes comes from **either** inline
 sensitive variables **or** local files via `file()` — inline takes precedence when both
-are set.
+are set. When `certificate_chain_pem` is supplied, the intermediate chain is appended
+to the leaf certificate (required by most public CAs, e.g. Sectigo).
 
 ## Usage
 
@@ -84,7 +85,8 @@ provider "volterra" {
 | `domains` | — (required) | LB domains (non-empty) |
 | `origin_servers` | — (required) | `[{ type = "dns"\|"ip", value = "..." }]` |
 | `origin_port` | `80` | Origin port |
-| `origin_use_tls` | `false` | TLS to origin (skips server verification) |
+| `origin_use_tls` | `false` | TLS to origin |
+| `origin_tls_skip_verification` | `false` | Skip origin cert verification (insecure; default verifies against the Volterra trusted CA) |
 | `health_check_path` | `"/"` | HTTP health check path |
 | `health_check_status_codes` | `["200"]` | Expected status codes |
 | `healthy_threshold` / `unhealthy_threshold` | `2` / `3` | Health thresholds |
@@ -117,7 +119,7 @@ No tenant credentials are needed for the logic tests — they use `mock_provider
 terraform fmt -check -recursive
 terraform init -backend=false
 terraform validate
-terraform test          # 9 plan-level assertions across all certificate modes
+terraform test          # 13 plan-level test cases across all certificate modes
 ```
 
 ## Notes

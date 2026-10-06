@@ -87,8 +87,10 @@ resource "volterra_origin_pool" "this" {
     content {
       default_session_key_caching = true
       no_mtls                     = true
-      skip_server_verification    = true
-      use_host_header_as_sni      = true
+      # Verify the origin certificate by default; skipping is an explicit opt-in.
+      skip_server_verification = var.origin_tls_skip_verification ? true : null
+      volterra_trusted_ca      = var.origin_tls_skip_verification ? null : true
+      use_host_header_as_sni   = true
       tls_config {
         default_security = true
       }
@@ -106,9 +108,10 @@ resource "volterra_http_loadbalancer" "this" {
   domains   = var.domains
 
   https {
-    port          = 443
-    http_redirect = var.enable_http_redirect
-    add_hsts      = var.enable_hsts
+    port                   = 443
+    http_redirect          = var.enable_http_redirect
+    add_hsts               = var.enable_hsts
+    disable_path_normalize = true
 
     tls_cert_params {
       no_mtls = true
@@ -170,4 +173,14 @@ resource "volterra_http_loadbalancer" "this" {
   user_id_client_ip                = true
 
   depends_on = [volterra_certificate.this]
+
+  lifecycle {
+    precondition {
+      # This LB always exists (unlike the count-gated certificate), so it is the
+      # right place to guard existing mode — a precondition on a count=0 resource
+      # never evaluates.
+      condition     = var.certificate_mode != "existing" || var.existing_certificate_name != ""
+      error_message = "certificate_mode=existing requires existing_certificate_name."
+    }
+  }
 }

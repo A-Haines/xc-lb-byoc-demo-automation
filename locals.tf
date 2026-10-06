@@ -18,6 +18,10 @@ locals {
   )
   chain_pem = var.certificate_chain_pem
 
+  # Certificate material sent to F5XC: leaf, with any intermediate chain appended.
+  # Sectigo and most public CAs require the intermediate chain to be served.
+  cert_full_pem = local.chain_pem != "" ? "${local.cert_pem}\n${local.chain_pem}" : local.cert_pem
+
   create_certificate = var.certificate_mode != "existing"
 
   cert_ref_name      = var.certificate_mode == "existing" ? var.existing_certificate_name : local.cert_name

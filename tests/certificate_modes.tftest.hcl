@@ -133,3 +133,59 @@ run "invalid_origin_type_rejected" {
     origin_servers            = [{ type = "ftp", value = "x" }]
   }
 }
+
+# existing mode with empty name must fail at plan (guard must fire even at count=0)
+run "existing_missing_name_fails" {
+  command         = plan
+  expect_failures = [volterra_http_loadbalancer.this]
+  variables {
+    certificate_mode          = "existing"
+    existing_certificate_name = ""
+  }
+}
+
+# HTTPS LB must set the path-normalize required oneof (real-apply oneof)
+run "lb_sets_path_normalize" {
+  command = plan
+  variables {
+    certificate_mode          = "existing"
+    existing_certificate_name = "c"
+  }
+  assert {
+    condition     = volterra_http_loadbalancer.this.https[0].disable_path_normalize == true
+    error_message = "https block must set disable_path_normalize to satisfy the required path-normalize oneof"
+  }
+}
+
+# origin TLS verifies the server by default (no hardcoded skip)
+run "origin_tls_verifies_by_default" {
+  command = plan
+  variables {
+    certificate_mode          = "existing"
+    existing_certificate_name = "c"
+    origin_use_tls            = true
+  }
+  assert {
+    condition     = volterra_origin_pool.this.use_tls[0].volterra_trusted_ca == true
+    error_message = "origin use_tls must verify the server by default (volterra_trusted_ca), not skip verification"
+  }
+  assert {
+    condition     = volterra_origin_pool.this.use_tls[0].skip_server_verification != true
+    error_message = "origin use_tls must not skip server verification unless explicitly opted in"
+  }
+}
+
+# certificate chain is included in the certificate material when provided
+run "cert_chain_included" {
+  command = plan
+  variables {
+    certificate_mode      = "clear"
+    certificate_pem       = "-----BEGIN CERTIFICATE-----\nLEAF\n-----END CERTIFICATE-----"
+    certificate_chain_pem = "-----BEGIN CERTIFICATE-----\nINTERMEDIATE\n-----END CERTIFICATE-----"
+    private_key_pem       = "-----BEGIN PRIVATE KEY-----\nY\n-----END PRIVATE KEY-----"
+  }
+  assert {
+    condition     = volterra_certificate.this[0].certificate_url == "string:///${base64encode("-----BEGIN CERTIFICATE-----\nLEAF\n-----END CERTIFICATE-----\n-----BEGIN CERTIFICATE-----\nINTERMEDIATE\n-----END CERTIFICATE-----")}"
+    error_message = "certificate_url must append the intermediate chain after the leaf certificate"
+  }
+}
