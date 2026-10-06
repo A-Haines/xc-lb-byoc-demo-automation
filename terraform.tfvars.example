@@ -1,0 +1,14 @@
+app_namespace = "my-app-ns"
+domains       = ["www.example.com"]
+
+origin_servers = [
+  { type = "dns", value = "origin.example.com" },
+]
+
+certificate_mode = "clear"
+# Provide via TF_VAR_* env vars:
+# certificate_pem = "..."
+# private_key_pem = "..."
+
+waf_enforcement = "blocking"
+advertise_mode  = "public_default_vip"
