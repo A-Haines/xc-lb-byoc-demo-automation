@@ -15,3 +15,7 @@ crash.*.log
 *.p12
 *.pem
 *.key
+
+# Inert test fixtures (placeholder PEMs, not real secrets) — keep tracked
+!tests/fixtures/
+!tests/fixtures/*.pem
