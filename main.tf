@@ -95,3 +95,79 @@ resource "volterra_origin_pool" "this" {
     }
   }
 }
+
+#############################################
+# App namespace: HTTPS Load Balancer
+#############################################
+
+resource "volterra_http_loadbalancer" "this" {
+  name      = local.names.lb
+  namespace = var.app_namespace
+  domains   = var.domains
+
+  https {
+    port          = 443
+    http_redirect = var.enable_http_redirect
+    add_hsts      = var.enable_hsts
+
+    tls_cert_params {
+      no_mtls = true
+      certificates {
+        name      = local.cert_ref_name
+        namespace = local.cert_ref_namespace
+      }
+      tls_config {
+        default_security = true
+      }
+    }
+  }
+
+  app_firewall {
+    name      = volterra_app_firewall.this.name
+    namespace = "shared"
+  }
+
+  active_service_policies {
+    policies {
+      name      = volterra_service_policy.this.name
+      namespace = "shared"
+    }
+  }
+
+  default_route_pools {
+    pool {
+      name      = volterra_origin_pool.this.name
+      namespace = var.app_namespace
+    }
+    weight = 1
+  }
+
+  # Advertisement (one of the required oneof)
+  advertise_on_public_default_vip = var.advertise_mode == "public_default_vip" ? true : null
+  do_not_advertise                = var.advertise_mode == "do_not_advertise" ? true : null
+  dynamic "advertise_on_public" {
+    for_each = var.advertise_mode == "public_ip" ? [1] : []
+    content {
+      public_ip {
+        name      = "${var.name_prefix}-public-ip"
+        namespace = "shared"
+      }
+    }
+  }
+
+  # Required oneof selectors — safe minimal defaults
+  no_challenge                     = true
+  round_robin                      = true
+  disable_api_definition           = true
+  disable_api_discovery            = true
+  disable_api_testing              = true
+  disable_malicious_user_detection = true
+  disable_malware_protection       = true
+  disable_rate_limit               = true
+  default_sensitive_data_policy    = true
+  disable_threat_mesh              = true
+  disable_trust_client_ip_headers  = true
+  user_id_client_ip                = true
+
+  depends_on = [volterra_certificate.this]
+}
