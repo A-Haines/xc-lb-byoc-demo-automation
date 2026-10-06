@@ -1,0 +1,6 @@
+api_p12_file = "/path/to/api_credential.p12"
+api_url      = "https://my-tenant.console.ves.volterra.io/api"
+# Provide PEMs via TF_VAR_certificate_pem / TF_VAR_private_key_pem env vars,
+# or uncomment and paste here (keep this file out of version control):
+# certificate_pem = "-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----"
+# private_key_pem = "-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----"
