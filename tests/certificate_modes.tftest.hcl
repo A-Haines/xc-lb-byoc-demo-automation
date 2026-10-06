@@ -144,16 +144,17 @@ run "existing_missing_name_fails" {
   }
 }
 
-# HTTPS LB must set the path-normalize required oneof (real-apply oneof)
-run "lb_sets_path_normalize" {
+# HTTPS LB must ENABLE path normalization (security control; also satisfies the
+# required path-normalize oneof). Disabling it would let path-traversal bypass the WAF.
+run "lb_enables_path_normalize" {
   command = plan
   variables {
     certificate_mode          = "existing"
     existing_certificate_name = "c"
   }
   assert {
-    condition     = volterra_http_loadbalancer.this.https[0].disable_path_normalize == true
-    error_message = "https block must set disable_path_normalize to satisfy the required path-normalize oneof"
+    condition     = volterra_http_loadbalancer.this.https[0].enable_path_normalize == true
+    error_message = "https block must set enable_path_normalize (secure default) to satisfy the path-normalize oneof"
   }
 }
 

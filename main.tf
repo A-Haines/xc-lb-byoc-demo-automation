@@ -108,10 +108,12 @@ resource "volterra_http_loadbalancer" "this" {
   domains   = var.domains
 
   https {
-    port                   = 443
-    http_redirect          = var.enable_http_redirect
-    add_hsts               = var.enable_hsts
-    disable_path_normalize = true
+    port          = 443
+    http_redirect = var.enable_http_redirect
+    add_hsts      = var.enable_hsts
+    # Normalize request paths before WAF/service-policy evaluation so that
+    # path-traversal encodings (e.g. /app/../admin) cannot bypass them.
+    enable_path_normalize = true
 
     tls_cert_params {
       no_mtls = true
