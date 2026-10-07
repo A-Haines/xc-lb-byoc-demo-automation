@@ -21,3 +21,5 @@ crash.*.log
 *.blindfold
 policy
 pubkey
+key.blindfold
+key.blindfold.tmp

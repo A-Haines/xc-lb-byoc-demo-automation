@@ -3,37 +3,31 @@
 variable "xc_api_p12_file" {
   description = "Path to the F5 XC API P12 certificate file"
   type        = string
-  default = "/Users/a.haines/Library/CloudStorage/OneDrive-F5,Inc/GitHub/f5-amer-ent.console.ves.volterra.io.api-creds.p12"
 }
 
 variable "xc_api_url" {
   description = "F5 XC API URL (e.g. https://<tenant>.console.ves.volterra.io/api)"
   type        = string
-  default = "https://f5-amer-ent.console.ves.volterra.io/api"
 }
 
 variable "app_namespace" {
   description = "Existing F5XC namespace for healthcheck, origin pool, and load balancer."
   type        = string
-  default = "a-haines"
 }
 
 variable "name_prefix" {
   description = "Prefix for all created resource names."
   type        = string
-  default     = "epsilon"
 }
 
 variable "domains" {
   description = "Domains served by the HTTPS load balancer."
   type        = list(string)
-  default     = ["www.auto-test.cloud.myf5demo.com"]
 }
 
 variable "origin_servers" {
   description = "Public DNS names of the origin servers."
   type        = list(string)
-  default     = ["ah-digital-azure.azurewebsites.net"]
 }
 
 variable "origin_port" {
@@ -127,7 +121,7 @@ variable "enable_hsts" {
 variable "certificate_mode" {
   description = "How the private key is supplied: \"clear\" (unencrypted key.pem) or \"blindfold\" (offline-encrypted key.blindfold)."
   type        = string
-  default     = "blindfold"
+  default     = "clear"
 
   validation {
     condition     = contains(["clear", "blindfold"], var.certificate_mode)
