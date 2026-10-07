@@ -1,33 +1,76 @@
 # F5 Distributed Cloud - Bring Your Own Certificate Load Balancer Terraform Package
 
-TTerraform module that deploys a HTTPS Load Balancer in F5 Distributed Cloud (XC) with 
+Terraform module that deploys a HTTPS Load Balancer in F5 Distributed Cloud (XC) with 
 one `terraform apply`. The TLS certificate is supplied from a **local folder** — 
 point `cert_dir` at a directory of PEM files and the module does the rest.
 
 ## Quick Start
 
-Fastest path uses the [`clear`](examples/clear/) example. You need: Terraform ≥ 1.7, an
-F5XC API **P12 file + password**, and an **existing app namespace** in your tenant.
+You need: Terraform ≥ 1.5, an F5XC API **P12 file + password**, and an **existing app 
+namespace** in your tenant.
 
 ```bash
-# 1. Go to the ready-made example root
-cd examples/clear
+# 1. Clone and enter the repo
+git clone <repo-url>
+cd xc-lb-byoc-demo-automation
 
-# 2. Drop your TLS files into ./certs  (clear mode = plaintext key; fine for a demo)
+# 2. Drop your TLS files into ./certs (clear mode = plaintext key; fine for a demo)
 mkdir -p certs
 cp /path/to/cert.pem certs/cert.pem
 cp /path/to/key.pem  certs/key.pem
 
-# 3. Point at your tenant + P12
-cp terraform.tfvars.example terraform.tfvars   # then edit api_p12_file and api_url
+# 3. Configure your variables (see "Configuring Variables" below)
+cp terraform.tfvars.example terraform.tfvars
+# Edit terraform.tfvars with your values
+
+# 4. Set the P12 password
 export VES_P12_PASSWORD='<your-p12-password>'
 
-# 4. Edit the three app lines in main.tf: app_namespace (MUST already exist in your
-#    tenant — the module does not create it), domains, origin_servers
-
-# 5. Ship it
-terraform init && terraform apply -var-file=terraform.tfvars
+# 5. Deploy
+terraform init && terraform apply
 ```
+
+## Configuring Variables
+
+The easiest way to configure this module is with a `terraform.tfvars` file. Copy the 
+example and fill in your values:
+
+```bash
+cp terraform.tfvars.example terraform.tfvars
+```
+
+Then edit `terraform.tfvars`:
+
+```hcl
+# Required: F5 XC API credentials
+xc_api_p12_file = "/path/to/your-tenant.console.ves.volterra.io.api-creds.p12"
+xc_api_url      = "https://your-tenant.console.ves.volterra.io/api"
+
+# Required: Application configuration
+app_namespace   = "my-app-ns"      # Must already exist in your tenant
+name_prefix     = "demo"           # Prefix for all created resources
+domains         = "www.example.com"
+origin_servers  = "origin.example.com"
+```
+
+### All Variables
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `xc_api_p12_file` | yes | — | Path to F5 XC API P12 certificate file |
+| `xc_api_url` | yes | — | F5 XC API URL (e.g. `https://<tenant>.console.ves.volterra.io/api`) |
+| `app_namespace` | yes | — | Existing F5XC namespace for resources |
+| `name_prefix` | yes | — | Prefix for all created resource names |
+| `domains` | yes | — | Domain served by the load balancer |
+| `origin_servers` | yes | — | Public DNS name of the origin server |
+| `origin_port` | no | `80` | TCP port on the origin server |
+| `origin_use_tls` | no | `false` | Connect to origin over TLS |
+| `waf_enforcement` | no | `monitoring` | WAF mode: `blocking` or `monitoring` |
+| `certificate_mode` | no | `clear` | Key mode: `clear` or `blindfold` |
+| `cert_dir` | no | `./certs` | Path to folder with TLS material |
+
+> **Note:** When entering paths at an interactive prompt, do **not** include quotes around 
+> the value. Use `terraform.tfvars` to avoid interactive prompt issues.
 
 `terraform apply` prints the load balancer domain. Point DNS at the XC VIP and you're
 live. For production (key never in plaintext) use [`blindfold`](examples/blindfold/)

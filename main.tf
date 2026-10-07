@@ -9,7 +9,6 @@ resource "volterra_app_firewall" "this" {
   allow_all_response_codes   = true
   disable_anonymization      = true
   use_default_blocking_page  = true
-  default_bot_setting        = true
   default_detection_settings = true
 
   enable_ai_enhancements {
@@ -53,7 +52,7 @@ resource "volterra_origin_pool" "this" {
   port                   = var.origin_port
 
   dynamic "origin_servers" {
-    for_each = var.origin_servers
+    for_each = toset([var.origin_servers])
     content {
       public_name {
         dns_name = origin_servers.value
@@ -91,7 +90,7 @@ resource "volterra_origin_pool" "this" {
 resource "volterra_http_loadbalancer" "this" {
   name      = local.names.lb
   namespace = var.app_namespace
-  domains   = var.domains
+  domains   = [var.domains]
 
   https {
     port          = 443

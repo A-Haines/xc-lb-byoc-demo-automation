@@ -1,15 +1,21 @@
-app_namespace = "my-app-ns"
-domains       = ["www.example.com"]
+# F5 XC API Credentials
+# Download your P12 file from the XC Console: Administration > Credentials
+xc_api_p12_file = "/path/to/your-tenant.console.ves.volterra.io.api-creds.p12"
+xc_api_url      = "https://your-tenant.console.ves.volterra.io/api"
 
-origin_servers = ["origin.example.com"]
+# Application Configuration (required)
+app_namespace  = "my-app-ns"           # Must already exist in your tenant
+name_prefix    = "demo"                # Prefix for all created resources
+domains        = "www.example.com"     # Domain for the load balancer
+origin_servers = "origin.example.com"  # Origin server DNS name
 
-# TLS material is read from a local folder by convention:
-#   <cert_dir>/cert.pem       leaf certificate (required)
-#   <cert_dir>/chain.pem      intermediate chain (optional)
-#   <cert_dir>/key.pem        unencrypted key   (certificate_mode = "clear")
-#   <cert_dir>/key.blindfold  encrypted key loc (certificate_mode = "blindfold")
-certificate_mode = "clear"
-cert_dir         = "./certs"
+# Origin Settings (optional)
+# origin_port    = 80      # TCP port on the origin server
+# origin_use_tls = false   # Set true to connect to origin over TLS
 
-waf_enforcement = "blocking"
-advertise_mode  = "public_default_vip"
+# WAF Settings (optional)
+# waf_enforcement = "monitoring"  # "blocking" or "monitoring"
+
+# Certificate Settings (optional)
+# certificate_mode = "clear"   # "clear" (plaintext key) or "blindfold" (encrypted)
+# cert_dir         = "./certs" # Path to folder containing cert.pem, key.pem, etc.

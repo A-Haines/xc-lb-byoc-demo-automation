@@ -21,13 +21,13 @@ variable "name_prefix" {
 }
 
 variable "domains" {
-  description = "Domains served by the HTTPS load balancer."
-  type        = list(string)
+  description = "Domain served by the HTTPS load balancer (single string, converted to list internally)."
+  type        = string
 }
 
 variable "origin_servers" {
-  description = "Public DNS names of the origin servers."
-  type        = list(string)
+  description = "Public DNS name of the origin server (single string, converted to list internally)."
+  type        = string
 }
 
 variable "origin_port" {
