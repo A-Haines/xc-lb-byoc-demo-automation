@@ -1,2 +1,0 @@
-api_p12_file = "/path/to/api_credential.p12"
-api_url      = "https://my-tenant.console.ves.volterra.io/api"

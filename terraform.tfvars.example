@@ -1,14 +1,15 @@
 app_namespace = "my-app-ns"
 domains       = ["www.example.com"]
 
-origin_servers = [
-  { type = "dns", value = "origin.example.com" },
-]
+origin_servers = ["origin.example.com"]
 
+# TLS material is read from a local folder by convention:
+#   <cert_dir>/cert.pem       leaf certificate (required)
+#   <cert_dir>/chain.pem      intermediate chain (optional)
+#   <cert_dir>/key.pem        unencrypted key   (certificate_mode = "clear")
+#   <cert_dir>/key.blindfold  encrypted key loc (certificate_mode = "blindfold")
 certificate_mode = "clear"
-# Provide via TF_VAR_* env vars:
-# certificate_pem = "..."
-# private_key_pem = "..."
+cert_dir         = "./certs"
 
 waf_enforcement = "blocking"
 advertise_mode  = "public_default_vip"

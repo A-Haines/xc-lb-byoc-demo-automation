@@ -1,0 +1,7 @@
+api_p12_file = "/path/to/api_credential.p12"
+api_url      = "https://my-tenant.console.ves.volterra.io/api"
+
+# Put your TLS material in ./certs (git-ignored):
+#   examples/clear/certs/cert.pem    leaf certificate (required)
+#   examples/clear/certs/key.pem     unencrypted private key (required for clear mode)
+#   examples/clear/certs/chain.pem   intermediate chain (optional)

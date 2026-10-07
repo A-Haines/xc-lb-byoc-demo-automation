@@ -9,8 +9,8 @@ output "load_balancer_domains" {
 }
 
 output "certificate_id" {
-  description = "ID of the created certificate (null when certificate_mode=existing)."
-  value       = local.create_certificate ? volterra_certificate.this[0].id : null
+  description = "ID of the created certificate."
+  value       = volterra_certificate.this.id
 }
 
 output "certificate_reference" {
@@ -32,6 +32,6 @@ output "app_firewall_name" {
 }
 
 output "service_policy_name" {
-  description = "Name of the service policy (shared namespace)."
-  value       = volterra_service_policy.this.name
+  description = "Name of the service policy attached to the LB (empty if none)."
+  value       = var.service_policy_name
 }

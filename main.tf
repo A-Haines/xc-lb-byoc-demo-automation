@@ -11,22 +11,17 @@ resource "volterra_app_firewall" "this" {
   use_default_blocking_page  = true
   default_bot_setting        = true
   default_detection_settings = true
-  disable_ai_enhancements    = true
+
+  enable_ai_enhancements {
+    mitigate_high_medium_risk_action = true
+  }
 
   blocking   = var.waf_enforcement == "blocking" ? true : null
   monitoring = var.waf_enforcement == "monitoring" ? true : null
 }
 
-resource "volterra_service_policy" "this" {
-  name      = local.names.svc
-  namespace = "shared"
-  algo      = "FIRST_MATCH"
-
-  any_server = true
-
-  allow_all_requests = var.service_policy_action == "allow_all" ? true : null
-  deny_all_requests  = var.service_policy_action == "deny_all" ? true : null
-}
+# Service policy is OPTIONAL - tenant may have hit 550 policy limit.
+# Set var.service_policy_name to an existing policy name, or leave empty to skip.
 
 #############################################
 # App namespace: Health Check & Origin Pool
@@ -60,17 +55,8 @@ resource "volterra_origin_pool" "this" {
   dynamic "origin_servers" {
     for_each = var.origin_servers
     content {
-      dynamic "public_name" {
-        for_each = origin_servers.value.type == "dns" ? [1] : []
-        content {
-          dns_name = origin_servers.value.value
-        }
-      }
-      dynamic "public_ip" {
-        for_each = origin_servers.value.type == "ip" ? [1] : []
-        content {
-          ip = origin_servers.value.value
-        }
+      public_name {
+        dns_name = origin_servers.value
       }
     }
   }
@@ -132,12 +118,17 @@ resource "volterra_http_loadbalancer" "this" {
     namespace = "shared"
   }
 
-  active_service_policies {
-    policies {
-      name      = volterra_service_policy.this.name
-      namespace = "shared"
+  # Service policy: use existing if specified, otherwise skip (no_service_policies)
+  dynamic "active_service_policies" {
+    for_each = var.service_policy_name != "" ? [1] : []
+    content {
+      policies {
+        name      = var.service_policy_name
+        namespace = "shared"
+      }
     }
   }
+  no_service_policies = var.service_policy_name == "" ? true : null
 
   default_route_pools {
     pool {
@@ -175,14 +166,4 @@ resource "volterra_http_loadbalancer" "this" {
   user_id_client_ip                = true
 
   depends_on = [volterra_certificate.this]
-
-  lifecycle {
-    precondition {
-      # This LB always exists (unlike the count-gated certificate), so it is the
-      # right place to guard existing mode — a precondition on a count=0 resource
-      # never evaluates.
-      condition     = var.certificate_mode != "existing" || var.existing_certificate_name != ""
-      error_message = "certificate_mode=existing requires existing_certificate_name."
-    }
-  }
 }

@@ -1,7 +1,13 @@
 api_p12_file = "/path/to/api_credential.p12"
 api_url      = "https://my-tenant.console.ves.volterra.io/api"
-# Blindfold the key offline first with vesctl:
-#   vesctl request secrets encrypt --policy-document policy.json key.pem
-# Then set the resulting location (e.g. "string:///<base64>"):
-# blindfold_key_location = "string:///..."
-# certificate_pem via TF_VAR_certificate_pem env var is recommended.
+
+# Put your TLS material in ./certs (git-ignored):
+#   examples/blindfold/certs/cert.pem        leaf certificate (required)
+#   examples/blindfold/certs/key.blindfold   offline-encrypted key location (required)
+#   examples/blindfold/certs/chain.pem       intermediate chain (optional)
+#
+# Blindfold the key offline first with vesctl, and write the resulting
+# "string:///<blob>" location into certs/key.blindfold (see README.md for full steps):
+#   vesctl request secrets get-public-key > pubkey
+#   vesctl request secrets get-policy-document --namespace shared --name ves-io-allow-volterra > policy
+#   vesctl request secrets encrypt --policy-document policy --public-key pubkey key.pem > certs/key.blindfold

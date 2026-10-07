@@ -11,15 +11,11 @@ terraform {
 provider "volterra" {
   api_p12_file = var.api_p12_file
   url          = var.api_url
+  # P12 password comes from the VES_P12_PASSWORD environment variable.
 }
 
 variable "api_p12_file" { type = string }
 variable "api_url" { type = string }
-variable "certificate_pem" {
-  type      = string
-  sensitive = true
-}
-variable "blindfold_key_location" { type = string }
 
 module "app_delivery" {
   source = "../.."
@@ -27,13 +23,11 @@ module "app_delivery" {
   app_namespace = "my-app-ns"
   domains       = ["www.example.com"]
 
-  origin_servers = [
-    { type = "dns", value = "origin.example.com" },
-  ]
+  origin_servers = ["origin.example.com"]
 
-  certificate_mode       = "blindfold"
-  certificate_pem        = var.certificate_pem
-  blindfold_key_location = var.blindfold_key_location
+  # Point at a local folder holding cert.pem + key.blindfold (and optional chain.pem).
+  certificate_mode = "blindfold"
+  cert_dir         = "${path.module}/certs"
 }
 
 output "load_balancer_domains" {

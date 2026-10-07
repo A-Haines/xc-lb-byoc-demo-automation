@@ -1,6 +1,21 @@
+#--- F5 XC API auth ------------------------------------------------------------
+
+variable "xc_api_p12_file" {
+  description = "Path to the F5 XC API P12 certificate file"
+  type        = string
+  default = "/Users/a.haines/Library/CloudStorage/OneDrive-F5,Inc/GitHub/f5-amer-ent.console.ves.volterra.io.api-creds.p12"
+}
+
+variable "xc_api_url" {
+  description = "F5 XC API URL (e.g. https://<tenant>.console.ves.volterra.io/api)"
+  type        = string
+  default = "https://f5-amer-ent.console.ves.volterra.io/api"
+}
+
 variable "app_namespace" {
   description = "Existing F5XC namespace for healthcheck, origin pool, and load balancer."
   type        = string
+  default = "a-haines"
 }
 
 variable "name_prefix" {
@@ -12,26 +27,13 @@ variable "name_prefix" {
 variable "domains" {
   description = "Domains served by the HTTPS load balancer."
   type        = list(string)
-  validation {
-    condition     = length(var.domains) > 0
-    error_message = "At least one domain is required."
-  }
+  default     = ["www.auto-test.cloud.myf5demo.com"]
 }
 
 variable "origin_servers" {
-  description = "Origin servers. Each entry: type = \"dns\" or \"ip\", value = hostname or IP."
-  type = list(object({
-    type  = string
-    value = string
-  }))
-  validation {
-    condition     = length(var.origin_servers) > 0
-    error_message = "At least one origin server is required."
-  }
-  validation {
-    condition     = alltrue([for s in var.origin_servers : contains(["dns", "ip"], s.type)])
-    error_message = "Each origin_servers entry type must be \"dns\" or \"ip\"."
-  }
+  description = "Public DNS names of the origin servers."
+  type        = list(string)
+  default     = ["ah-digital-azure.azurewebsites.net"]
 }
 
 variable "origin_port" {
@@ -91,31 +93,19 @@ variable "health_timeout" {
 variable "waf_enforcement" {
   description = "App firewall mode: blocking or monitoring."
   type        = string
-  default     = "blocking"
-  validation {
-    condition     = contains(["blocking", "monitoring"], var.waf_enforcement)
-    error_message = "waf_enforcement must be \"blocking\" or \"monitoring\"."
-  }
+  default     = "monitoring"
 }
 
-variable "service_policy_action" {
-  description = "Service policy default action: allow_all or deny_all."
+variable "service_policy_name" {
+  description = "Name of an existing service policy in shared namespace. Leave empty to skip (no_service_policies)."
   type        = string
-  default     = "allow_all"
-  validation {
-    condition     = contains(["allow_all", "deny_all"], var.service_policy_action)
-    error_message = "service_policy_action must be \"allow_all\" or \"deny_all\"."
-  }
+  default     = ""
 }
 
 variable "advertise_mode" {
   description = "LB advertisement: public_default_vip, public_ip, or do_not_advertise."
   type        = string
   default     = "public_default_vip"
-  validation {
-    condition     = contains(["public_default_vip", "public_ip", "do_not_advertise"], var.advertise_mode)
-    error_message = "advertise_mode must be public_default_vip, public_ip, or do_not_advertise."
-  }
 }
 
 variable "enable_http_redirect" {
@@ -130,14 +120,33 @@ variable "enable_hsts" {
   default     = true
 }
 
+#############################################
+# Certificate: local-folder sourced
+#############################################
+
 variable "certificate_mode" {
-  description = "How the TLS certificate is supplied: clear, blindfold, vault, or existing."
+  description = "How the private key is supplied: \"clear\" (unencrypted key.pem) or \"blindfold\" (offline-encrypted key.blindfold)."
   type        = string
   default     = "clear"
+
   validation {
-    condition     = contains(["clear", "blindfold", "vault", "existing"], var.certificate_mode)
-    error_message = "certificate_mode must be clear, blindfold, vault, or existing."
+    condition     = contains(["clear", "blindfold"], var.certificate_mode)
+    error_message = "certificate_mode must be \"clear\" or \"blindfold\"."
   }
+}
+
+variable "cert_dir" {
+  description = <<-EOT
+    Path to a local folder holding the TLS material, by convention:
+      cert.pem       leaf certificate (required)
+      chain.pem      intermediate chain (optional; appended after the leaf)
+      key.pem        unencrypted private key (certificate_mode = "clear")
+      key.blindfold  offline-encrypted key location, e.g. string:///<blob> from
+                     `vesctl request secrets encrypt` (certificate_mode = "blindfold")
+    Pass an absolute path or "$${path.module}/certs" from the calling root.
+  EOT
+  type        = string
+  default = "/Users/a.haines/Library/CloudStorage/OneDrive-F5,Inc/certs"
 }
 
 variable "certificate_name" {
@@ -148,75 +157,6 @@ variable "certificate_name" {
 
 variable "certificate_namespace" {
   description = "Namespace for the created certificate."
-  type        = string
-  default     = "shared"
-}
-
-variable "certificate_pem" {
-  description = "Certificate PEM (inline). Used by clear/blindfold modes if certificate_file is empty."
-  type        = string
-  default     = ""
-  sensitive   = true
-}
-
-variable "private_key_pem" {
-  description = "Private key PEM (inline, unencrypted). Used by clear mode if private_key_file is empty."
-  type        = string
-  default     = ""
-  sensitive   = true
-}
-
-variable "certificate_chain_pem" {
-  description = "Optional intermediate certificate chain PEM (inline)."
-  type        = string
-  default     = ""
-  sensitive   = true
-}
-
-variable "certificate_file" {
-  description = "Path to a certificate PEM file (alternative to certificate_pem)."
-  type        = string
-  default     = ""
-}
-
-variable "private_key_file" {
-  description = "Path to a private key PEM file (alternative to private_key_pem)."
-  type        = string
-  default     = ""
-}
-
-variable "blindfold_key_location" {
-  description = "Blindfolded private key location, e.g. string:///<blindfolded>. Used by blindfold mode."
-  type        = string
-  default     = ""
-}
-
-variable "vault_key_location" {
-  description = "Path to the key secret in Vault. Used by vault mode (provider-deprecated)."
-  type        = string
-  default     = ""
-}
-
-variable "vault_provider" {
-  description = "Secret Management Access object name backing Vault. Used by vault mode."
-  type        = string
-  default     = ""
-}
-
-variable "vault_key" {
-  description = "Optional specific key within the Vault secret."
-  type        = string
-  default     = ""
-}
-
-variable "existing_certificate_name" {
-  description = "Name of a pre-existing certificate to reference. Used by existing mode."
-  type        = string
-  default     = ""
-}
-
-variable "existing_certificate_namespace" {
-  description = "Namespace of the pre-existing certificate. Used by existing mode."
   type        = string
   default     = "shared"
 }

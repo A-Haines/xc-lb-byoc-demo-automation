@@ -1,5 +1,15 @@
+# Preconditions: fail early if required files are missing for the chosen mode
+locals {
+  _validate_clear = var.certificate_mode == "clear" && local.key_pem == "" ? tobool(
+    "certificate_mode=clear requires ${var.cert_dir}/key.pem to exist"
+  ) : true
+
+  _validate_blindfold = var.certificate_mode == "blindfold" && local.blindfold_key_location == "" ? tobool(
+    "certificate_mode=blindfold requires ${var.cert_dir}/key.blindfold to exist. Create it with: vesctl request secrets encrypt --policy-document <policy.json> < key.pem > key.blindfold"
+  ) : true
+}
+
 resource "volterra_certificate" "this" {
-  count     = local.create_certificate ? 1 : 0
   name      = local.cert_name
   namespace = var.certificate_namespace
 
@@ -16,30 +26,8 @@ resource "volterra_certificate" "this" {
     dynamic "blindfold_secret_info" {
       for_each = var.certificate_mode == "blindfold" ? [1] : []
       content {
-        location = var.blindfold_key_location
+        location = local.blindfold_key_location
       }
-    }
-
-    dynamic "vault_secret_info" {
-      for_each = var.certificate_mode == "vault" ? [1] : []
-      content {
-        location = var.vault_key_location
-        provider = var.vault_provider
-        key      = var.vault_key
-      }
-    }
-  }
-
-  lifecycle {
-    precondition {
-      condition = (
-        var.certificate_mode == "clear" ? (local.cert_pem != "" && local.key_pem != "") : (
-          var.certificate_mode == "blindfold" ? (local.cert_pem != "" && var.blindfold_key_location != "") : (
-            var.certificate_mode == "vault" ? (var.vault_key_location != "" && var.vault_provider != "") : true
-          )
-        )
-      )
-      error_message = "Missing inputs for certificate_mode=${var.certificate_mode}: clear needs cert+key material; blindfold needs cert + blindfold_key_location; vault needs vault_key_location + vault_provider."
     }
   }
 }

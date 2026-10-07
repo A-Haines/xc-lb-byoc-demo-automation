@@ -11,28 +11,23 @@ terraform {
 provider "volterra" {
   api_p12_file = var.api_p12_file
   url          = var.api_url
+  # P12 password comes from the VES_P12_PASSWORD environment variable.
 }
 
 variable "api_p12_file" { type = string }
 variable "api_url" { type = string }
 
-# Use this mode when the certificate is managed outside Terraform:
-# a pre-uploaded custom cert, OR an XC-managed certificate issued via the
-# Sectigo CA -> Venafi -> F5 Distributed Cloud integration (see
-# scripts/xc-managed-cert.md). Terraform only references it by name.
 module "app_delivery" {
   source = "../.."
 
   app_namespace = "my-app-ns"
   domains       = ["www.example.com"]
 
-  origin_servers = [
-    { type = "dns", value = "origin.example.com" },
-  ]
+  origin_servers = ["origin.example.com"]
 
-  certificate_mode               = "existing"
-  existing_certificate_name      = "www-example-com"
-  existing_certificate_namespace = "shared"
+  # Point at a local folder holding cert.pem + key.pem (and optional chain.pem).
+  certificate_mode = "clear"
+  cert_dir         = "${path.module}/certs"
 }
 
 output "load_balancer_domains" {
