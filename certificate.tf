@@ -5,7 +5,7 @@ locals {
   ) : true
 
   _validate_blindfold = var.certificate_mode == "blindfold" && local.blindfold_key_location == "" ? tobool(
-    "certificate_mode=blindfold requires ${var.cert_dir}/key.blindfold to exist. Create it with: vesctl request secrets encrypt --policy-document <policy.json> < key.pem > key.blindfold"
+    "certificate_mode=blindfold requires ${var.cert_dir}/key.blindfold to exist. Create it with: vesctl request secrets encrypt --policy-document policy --public-key pubkey key.pem | tail -1 > key.blindfold"
   ) : true
 }
 
@@ -26,7 +26,7 @@ resource "volterra_certificate" "this" {
     dynamic "blindfold_secret_info" {
       for_each = var.certificate_mode == "blindfold" ? [1] : []
       content {
-        location = local.blindfold_key_location
+        location = "string:///${local.blindfold_key_location}"
       }
     }
   }

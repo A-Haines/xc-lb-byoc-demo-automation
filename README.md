@@ -128,7 +128,7 @@ XC API). All three steps are required:
 ```bash
 vesctl request secrets get-public-key > pubkey
 vesctl request secrets get-policy-document --namespace shared --name ves-io-allow-volterra > policy
-vesctl request secrets encrypt --policy-document policy --public-key pubkey key.pem > certs/key.blindfold
+vesctl request secrets encrypt --policy-document policy --public-key pubkey key.pem | tail -1 > certs/key.blindfold
 ```
 
 See [`examples/blindfold`](examples/blindfold/) for `vesctl` install and full steps.

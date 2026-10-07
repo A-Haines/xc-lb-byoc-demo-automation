@@ -76,7 +76,8 @@ vesctl request secrets get-public-key > pubkey
 vesctl request secrets get-policy-document --namespace shared --name ves-io-allow-volterra > policy
 
 # 3c. Encrypt the private key → certs/key.blindfold
-vesctl request secrets encrypt --policy-document policy --public-key pubkey /path/to/key.pem > certs/key.blindfold
+# (pipe through tail -1 to strip the header line vesctl prints)
+vesctl request secrets encrypt --policy-document policy --public-key pubkey /path/to/key.pem | tail -1 > certs/key.blindfold
 ```
 
 `certs/key.blindfold` now holds a `string:///<base64>` value; the module reads it and
