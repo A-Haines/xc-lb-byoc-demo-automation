@@ -127,7 +127,7 @@ variable "enable_hsts" {
 variable "certificate_mode" {
   description = "How the private key is supplied: \"clear\" (unencrypted key.pem) or \"blindfold\" (offline-encrypted key.blindfold)."
   type        = string
-  default     = "clear"
+  default     = "blindfold"
 
   validation {
     condition     = contains(["clear", "blindfold"], var.certificate_mode)
@@ -146,7 +146,7 @@ variable "cert_dir" {
     Pass an absolute path or "$${path.module}/certs" from the calling root.
   EOT
   type        = string
-  default = "/Users/a.haines/Library/CloudStorage/OneDrive-F5,Inc/certs"
+  default = "./certs"
 }
 
 variable "certificate_name" {
