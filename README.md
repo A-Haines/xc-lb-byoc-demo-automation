@@ -1,11 +1,10 @@
-# F5 Distributed Cloud App-Delivery Terraform Package
+# F5 Distributed Cloud - Bring Your Own Certificate Load Balancer Terraform Package
 
-A lean, reusable Terraform module that deploys a complete HTTPS application-delivery
-stack in F5 Distributed Cloud (XC) with one `terraform apply`. The TLS certificate is
-supplied from a **local folder** — point `cert_dir` at a directory of PEM files and the
-module does the rest.
+TTerraform module that deploys a HTTPS Load Balancer in F5 Distributed Cloud (XC) with 
+one `terraform apply`. The TLS certificate is supplied from a **local folder** — 
+point `cert_dir` at a directory of PEM files and the module does the rest.
 
-## 🚀 Quick start — deploy in 5 steps
+## Quick Start
 
 Fastest path uses the [`clear`](examples/clear/) example. You need: Terraform ≥ 1.7, an
 F5XC API **P12 file + password**, and an **existing app namespace** in your tenant.
@@ -117,53 +116,13 @@ provider "volterra" {
 }
 ```
 
-## Inputs
-
-| Variable | Default | Purpose |
-|---|---|---|
-| `app_namespace` | — (required) | Namespace for health check / pool / LB |
-| `name_prefix` | `"epsilon"` | Prefix for created resource names |
-| `domains` | `["www.auto-test.cloud.myf5demo.com"]` | LB domains (non-empty) |
-| `origin_servers` | `["ah-digital-azure.azurewebsites.net"]` | Public DNS names of the origin servers |
-| `origin_port` | `80` | Origin port |
-| `origin_use_tls` | `false` | TLS to origin |
-| `origin_tls_skip_verification` | `false` | Skip origin cert verification (insecure; default verifies against the Volterra trusted CA) |
-| `health_check_path` | `"/"` | HTTP health check path |
-| `health_check_status_codes` | `["200"]` | Expected status codes |
-| `healthy_threshold` / `unhealthy_threshold` | `2` / `3` | Health thresholds |
-| `health_interval` / `health_timeout` | `10` / `3` | Health timing (seconds) |
-| `waf_enforcement` | `"blocking"` | `blocking` or `monitoring` |
-| `service_policy_action` | `"allow_all"` | `allow_all` or `deny_all` |
-| `advertise_mode` | `"public_default_vip"` | `public_default_vip`, `public_ip`, or `do_not_advertise` |
-| `enable_http_redirect` | `true` | HTTP→HTTPS redirect |
-| `enable_hsts` | `true` | HSTS header |
-| `certificate_mode` | `"clear"` | `clear` or `blindfold` |
-| `cert_dir` | — (required) | Local folder holding `cert.pem`, optional `chain.pem`, and `key.pem`/`key.blindfold` |
-| `certificate_name` | `"<name_prefix>-cert"` | Created cert name |
-| `certificate_namespace` | `"shared"` | Created cert namespace |
-
 ## Outputs
 
 `load_balancer_name`, `load_balancer_domains`, `certificate_id`,
 `certificate_reference` (`{name, namespace}`), `origin_pool_name`, `app_firewall_name`,
 `service_policy_name`.
 
-## Checking the configuration
-
-```bash
-terraform fmt -check -recursive
-terraform init -backend=false
-terraform validate      # one benign deprecation warning on default_bot_setting (see Notes)
-```
-
 ## Notes
 
-- **Namespaces are not created** by this module; `var.app_namespace` must pre-exist.
-- `advertise_mode = "public_ip"` references a Public IP object named
-  `<name_prefix>-public-ip` in `shared` that must pre-exist.
-- The App Firewall emits a provider **deprecation warning** on `default_bot_setting`.
-  The bot-protection setting is a required choice whose only options are both
-  provider-deprecated in v0.13.x, so the warning is unavoidable and benign; `validate`
-  still succeeds.
 - In `clear` mode the private key is stored in Terraform state. Prefer `blindfold` for
   anything beyond demos/labs.
