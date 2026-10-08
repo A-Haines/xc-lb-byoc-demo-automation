@@ -1,0 +1,21 @@
+# F5 XC API Credentials
+# Download your P12 file from the XC Console: Administration > Credentials
+xc_api_p12_file = "/Users/a.haines/Library/CloudStorage/OneDrive-F5,Inc/GitHub/f5-amer-ent.console.ves.volterra.io.api-creds.p12"
+xc_api_url      = "https://f5-amer-ent.console.ves.volterra.io/api"
+
+# Application Configuration (required)
+app_namespace  = "a-haines"           # Must already exist in your tenant
+name_prefix    = "epsilon-test-app1"                # Prefix for all created resources
+domains        = "www.auto-test.cloud.myf5demo.com"     # Domain for the load balancer
+origin_servers = "ah-digital-azure.azurewebsites.net"  # Origin server DNS name
+
+# Origin Settings (optional)
+# origin_port    = 80      # TCP port on the origin server
+# origin_use_tls = false   # Set true to connect to origin over TLS
+
+# WAF Settings (optional)
+waf_enforcement = "monitoring"  # "blocking" or "monitoring"
+
+# Certificate Settings (optional)
+certificate_mode = "clear"   # "clear" (plaintext key) or "blindfold" (encrypted)
+cert_dir         = "./certs" # Path to folder containing cert.pem, key.pem, etc.

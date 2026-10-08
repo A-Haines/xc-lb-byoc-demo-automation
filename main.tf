@@ -4,7 +4,9 @@
 
 resource "volterra_app_firewall" "this" {
   name      = local.names.waf
-  namespace = "shared"
+  # namespace = var.waf_namespace
+  namespace = local.waf_ref_namespace
+
 
   allow_all_response_codes   = true
   disable_anonymization      = true
@@ -114,7 +116,7 @@ resource "volterra_http_loadbalancer" "this" {
 
   app_firewall {
     name      = volterra_app_firewall.this.name
-    namespace = "shared"
+    namespace = local.waf_ref_namespace
   }
 
   # Service policy: use existing if specified, otherwise skip (no_service_policies)

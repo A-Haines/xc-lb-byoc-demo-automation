@@ -83,7 +83,16 @@ variable "health_timeout" {
   type        = number
   default     = 3
 }
+variable "waf_namespace" {
+  description = "Namespace for the created WAF."
+  type        = string
+  default     = "shared"
 
+  validation {
+    condition     = var.waf_namespace != ""
+    error_message = "waf_namespace cannot be empty; the Volterra API requires metadata.namespace."
+  }
+}
 variable "waf_enforcement" {
   description = "App firewall mode: blocking or monitoring."
   type        = string
@@ -152,5 +161,5 @@ variable "certificate_name" {
 variable "certificate_namespace" {
   description = "Namespace for the created certificate."
   type        = string
-  default     = "shared"
+  # default     = "shared"
 }

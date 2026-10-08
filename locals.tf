@@ -29,4 +29,6 @@ locals {
 
   cert_ref_name      = local.cert_name
   cert_ref_namespace = var.certificate_namespace
+
+  waf_ref_namespace = var.waf_namespace
 }
